@@ -3,3 +3,4 @@ Manifest.txt
 README.md
 Rakefile
 lib/wikk_webbrowser.rb
+version

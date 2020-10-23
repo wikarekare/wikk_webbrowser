@@ -1,15 +1,14 @@
 # -*- ruby -*-
 require 'rubygems'
 require 'hoe'        # gem install hoe
-load "#{__dir__}/lib/version"
-
 Hoe.plugin :yard
+load "#{__dir__}/version"
 
 Hoe.spec "#{PROJECT}" do 
   self.readme_file = "README.md"
   self.developer( "Rob Burrowes","r.burrowes@auckland.ac.nz")
   remote_rdoc_dir = '' # Release to root
-  
+    
   self.yard_title = "#{PROJECT}"
   self.yard_options = ['--markup', 'markdown', '--protected']
 end

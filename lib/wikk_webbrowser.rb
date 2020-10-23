@@ -7,13 +7,12 @@ require 'base64'
 
 # WIKK WebBrowser class under MIT Lic. https://github.com/wikarekare.
 # Wrapper around ruby's http classes
-#  WebBrowser.new.https_session(host: 'www.blah.com') do |session|
+#  WIKK_WebBrowser.new.https_session(host: 'www.blah.com') do |session|
 #    response = get_page(query: ,'/')
 #  end
 
-class WebBrowser
-  
-  load "#{__dir__}/version"
+class WIKK_WebBrowser
+  VERSION = '0.9.0'
   
   class Error < RuntimeError
     attr_accessor :web_return_code
@@ -35,12 +34,14 @@ class WebBrowser
   attr_accessor :use_ssl
   
 
-  # Create a WebBrowser instance
-  #  @param host [String] the host we want to connect to
-  #  @param port [Fixnum] Optional http server port
-  #  @param use_ssl [Boolean] Use https, if true
-  #  @param verify_cert [Boolean] Validate certificate if true (Nb lots of embedded devices have self signed certs, so verify will fail)
-  #  @return [WebBrowser]
+  # Create a WIKK_WebBrowser instance
+  #
+  # @param host [String] the host we want to connect to
+  # @param port [Fixnum] Optional http server port
+  # @param use_ssl [Boolean] Use https, if true
+  # @param verify_cert [Boolean] Validate certificate if true (Nb lots of embedded devices have self signed certs, so verify will fail)
+  # @return [WIKK_WebBrowser]
+  #
   def initialize(host:, port: nil, use_ssl: false, cookies: {}, verify_cert: true, debug: false)
     @host = host  #Need to do this, as passing nil is different to passing nothing to initialize!
     @cookies = cookies == nil ? {} : cookies
@@ -50,12 +51,17 @@ class WebBrowser
     @verify_cert = verify_cert
   end
 
-  # Create a WebBrowser instance, connect to the host via http, and yield the WebBrowser instance.
-  #  Automatically closes the http session on returning from the block passed to it.
-  #  @param host [String] the host we want to connect to
-  #  @param port [Fixnum] (80) the port the remote web server is running on
-  #  @param block [Proc] 
-  #  @yieldparam [WebBrowser] the session descriptor for further calls.
+  # Create a WIKK_WebBrowser instance, connect to the host via http, and yield the WIKK_WebBrowser instance.
+  # Automatically closes the http session on returning from the block passed to it.
+  #
+  # @param host [String] the host we want to connect to
+  #
+  # @param port [Fixnum] (80) the port the remote web server is running on
+  #
+  # @param block [Proc]
+  #
+  # @yieldparam [WIKK_WebBrowser] the session descriptor for further calls.
+  #
   def self.http_session(host:, port: nil, debug: false, cookies: {})
     wb = self.new(host: host, port: port, debug: debug, use_ssl: false, cookies: cookies)
     wb.http_session do
@@ -63,13 +69,13 @@ class WebBrowser
     end
   end
 
-  # Create a WebBrowser instance, connect to the host via https, and yield the WebBrowser instance.
+  # Create a WIKK_WebBrowser instance, connect to the host via https, and yield the WIKK_WebBrowser instance.
   #  Automatically closes the http session on returning from the block passed to it.
-  #  @param host [String] the host we want to connect to
-  #  @param port [Fixnum] (443) the port the remote web server is running on
-  #  @param verify_cert [Boolean] Validate certificate if true (Nb lots of embedded devices have self signed certs, so verify will fail)
-  #  @param block [Proc] 
-  #  @yieldparam [WebBrowser] the session descriptor for further calls.
+  # @param host [String] the host we want to connect to
+  # @param port [Fixnum] (443) the port the remote web server is running on
+  # @param verify_cert [Boolean] Validate certificate if true (Nb lots of embedded devices have self signed certs, so verify will fail)
+  # @param block [Proc] 
+  # @yieldparam [WIKK_WebBrowser] the session descriptor for further calls.
   def self.https_session(host:, port: nil, verify_cert: true, cookies: {}, debug: false)
     wb = self.new(host: host, port: port, cookies: cookies, use_ssl: true, verify_cert: verify_cert, debug: debug)
     wb.http_session do
@@ -79,10 +85,10 @@ class WebBrowser
 
   # Creating a session for http connection
   #   attached block would then call get or post NET::HTTP calls
-  #  @param port [Fixnum] Optional http server port
-  #  @param use_ssl [Boolean] Use https, if true
-  #  @param verify_cert [Boolean] Validate certificate if true (Nb lots of embedded devices have self signed certs, so verify will fail)
-  #  @param block [Proc] 
+  # @param port [Fixnum] Optional http server port
+  # @param use_ssl [Boolean] Use https, if true
+  # @param verify_cert [Boolean] Validate certificate if true (Nb lots of embedded devices have self signed certs, so verify will fail)
+  # @param block [Proc] 
   def http_session
     @http = Net::HTTP.new(@host, @port)   
     @http.set_debug_output($stdout) if @debug
@@ -95,30 +101,30 @@ class WebBrowser
   end
   
   # Web basic authentication (not exactly secure)
-  #  @param user [String] Account name
-  #  @param password [String] Accounts password
-  #  @return [String] Base64 encoded concatentation of user + ':' + password
+  # @param user [String] Account name
+  # @param password [String] Accounts password
+  # @return [String] Base64 encoded concatentation of user + ':' + password
   def basic_authorization(user:, password:)
     #req.basic_auth( user, password) if  user != nil
     'Basic ' + Base64.encode64( "#{user}:#{password}" )
   end
   
   # Dropbox style token authentication
-  #  @param token [String] Token, as issued by dropbox
-  #  @return [String] Concatenation of 'Bearer ' + token
+  # @param token [String] Token, as issued by dropbox
+  # @return [String] Concatenation of 'Bearer ' + token
   def bearer_authorization(token:)
     "Bearer " + token
   end
   
   # Add additional cookies
-  #  @param cookies [Hash] cookie_name => cookie_value
+  # @param cookies [Hash] cookie_name => cookie_value
   def add_cookies(cookies)
     cookies.each { |cookie_name, cookie_value| @cookies[cookie_name] = cookie_value }
   end
         
   # Save cookies returned by last html get/post. 
   # Removes previous cookies.
-  #  @param response [Net::HTTPResponse] result from HTTP calls
+  # @param response [Net::HTTPResponse] result from HTTP calls
   def save_cookies(response)
     if(cookie_lines = response.get_fields('set-cookie')) != nil
       cookie_lines.each do | cookie_line |
@@ -129,7 +135,7 @@ class WebBrowser
   end
   
   # Convert @cookies to ; separated strings
-  #  @return cookies string
+  # @return cookies string
   def cookies_to_s
     @cookies.to_a.map { |v| v.join('=') }.join('; ')
   end
@@ -137,12 +143,12 @@ class WebBrowser
   # send a GET query to the web server using an http get, and returns the response.
   #  Cookies in the response get preserved in @cookies, so they will be sent along with subsequent calls
   #  We are currently ignoring redirects from the PDU's we are querying.
-  #  @param query [String] The URL after the http://host/ bit and not usually not including parameters, if form_values are passed in
-  #  @param form_values [Hash{String=>Object-with-to_s}] The parameter passed to the web server eg. ?key1=value1&key2=value2...
-  #  @param authorization [String] If present, add Authorization header, using this string
-  #  @param extra_headers [Hash] Add these to standard headers
-  #  @param extra_cookies [Hash] Add these to standard cookies
-  #  @return [String] The Net::HTTPResponse.body text response from the web server
+  # @param query [String] The URL after the http://host/ bit and not usually not including parameters, if form_values are passed in
+  # @param form_values [Hash{String=>Object-with-to_s}] The parameter passed to the web server eg. ?key1=value1&key2=value2...
+  # @param authorization [String] If present, add Authorization header, using this string
+  # @param extra_headers [Hash] Add these to standard headers
+  # @param extra_cookies [Hash] Add these to standard cookies
+  # @return [String] The Net::HTTPResponse.body text response from the web server
   def get_page(query: ,form_values: nil, authorization: nil, extra_headers: {}, extra_cookies: {})
     $stderr.puts "Debugging On" if @debug
     query += form_values_to_s(form_values, query.index('?') != nil) #Should be using req.set_form_data, but it seems to by stripping the leading / and then the query fails.
@@ -192,13 +198,13 @@ class WebBrowser
   end
 
   # send a POST query to the server and return the response. 
-  #  @param query [String] URL, less the 'http://host/'  part
-  #  @param authorization [String] If present, add Authorization header, using this string
-  #  @param content_type [String] Posted content type
-  #  @param data [String] Text to add to body of post to the web server
-  #  @param extra_headers [Hash] Add these to standard headers
-  #  @param extra_cookies [Hash] Add these to standard cookies
-  #  @return [String] The Net::HTTPResponse.body text response from the web server
+  # @param query [String] URL, less the 'http://host/'  part
+  # @param authorization [String] If present, add Authorization header, using this string
+  # @param content_type [String] Posted content type
+  # @param data [String] Text to add to body of post to the web server
+  # @param extra_headers [Hash] Add these to standard headers
+  # @param extra_cookies [Hash] Add these to standard cookies
+  # @return [String] The Net::HTTPResponse.body text response from the web server
   def post_page(query:, authorization: nil, content_type: 'application/x-www-form-urlencoded', data: nil, extra_headers: {}, extra_cookies: {})
     url = URI.parse("#{@use_ssl ? "https" : "http"}://#{@host}/#{query}")
     req = Net::HTTP::Post.new(url.path)
@@ -251,12 +257,12 @@ class WebBrowser
   end
 
   # send a DELETE query to the server and return the response. 
-  #  @param query [String] URL, less the 'http://host/'  part
-  #  @param authorization [String] If present, add Authorization header, using this string
-  #  @param content_type [String] Posted content type
-  #  @param extra_headers [Hash] Add these to standard headers
-  #  @param extra_cookies [Hash] Add these to standard cookies
-  #  @return [String] The Net::HTTPResponse.body text response from the web server
+  # @param query [String] URL, less the 'http://host/'  part
+  # @param authorization [String] If present, add Authorization header, using this string
+  # @param content_type [String] Posted content type
+  # @param extra_headers [Hash] Add these to standard headers
+  # @param extra_cookies [Hash] Add these to standard cookies
+  # @return [String] The Net::HTTPResponse.body text response from the web server
   def delete_req(query:, authorization: nil, extra_headers: {}, extra_cookies: {})
     url = URI.parse("#{@use_ssl ? "https" : "http"}://#{@host}/#{query.gsub(/^\//,'')}")
     req = Net::HTTP::Delete.new(query)
@@ -286,13 +292,13 @@ class WebBrowser
   end
   
   # send a PUT query to the server and return the response. 
-  #  @param query [String] URL, less the 'http://host/'  part
-  #  @param authorization [String] If present, add Authorization header, using this string
-  #  @param content_type [String] Posted content type
-  #  @param data [String] Text to add to body of post to the web server
-  #  @param extra_headers [Hash] Add these to standard headers
-  #  @param extra_cookies [Hash] Add these to standard cookies
-  #  @return [String] The Net::HTTPResponse.body text response from the web server
+  # @param query [String] URL, less the 'http://host/'  part
+  # @param authorization [String] If present, add Authorization header, using this string
+  # @param content_type [String] Posted content type
+  # @param data [String] Text to add to body of post to the web server
+  # @param extra_headers [Hash] Add these to standard headers
+  # @param extra_cookies [Hash] Add these to standard cookies
+  # @return [String] The Net::HTTPResponse.body text response from the web server
   def put_req(query:, authorization: nil, content_type: '"application/octet-stream"', data: nil, extra_headers: {}, extra_cookies: {})
     url = URI.parse("#{@use_ssl ? "https" : "http"}://#{@host}/#{query}")
     req = Net::HTTP::Put.new(url.path)
