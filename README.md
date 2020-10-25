@@ -1,8 +1,8 @@
 # webbrowser
 
-Docs :: http://wikarekare.github.com/wikk_webbrowser/
-Source :: https://github.com/wikarekare/wikk_webbrowser
-Gem :: https://rubygems.org/gems/wikk_webbrowser
+* Docs :: https://wikarekare.github.io/wikk_webbrowser/
+* Source :: https://github.com/wikarekare/wikk_webbrowser
+* Gem :: https://rubygems.org/gems/wikk_webbrowser
 
 ## DESCRIPTION:
 
