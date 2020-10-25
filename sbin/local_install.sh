@@ -1,5 +1,6 @@
 #!/bin/sh
-. version
 #Need to run from command line.
-sudo /usr/local/bin/gem install pkg/${PROJECT}-${VERSION}.gem
+. version
 
+#Install the gem locally, so we can test all is well, before releasing the gem.
+sudo /usr/local/bin/gem install pkg/${PROJECT}-${VERSION}.gem
