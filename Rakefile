@@ -1,3 +1,4 @@
+#!/usr/local/bin/ruby
 # -*- ruby -*-
 require 'rubygems'
 require 'hoe'        # gem install hoe
@@ -11,6 +12,9 @@ Hoe.spec "#{PROJECT}" do
     
   self.yard_title = "#{PROJECT}"
   self.yard_options = ['--markup', 'markdown', '--protected']
+
+  self.dependency "nokogiri", ['~> 1.0', '>= 1.0.0']
+  self.dependency 'hoe-yard', ['~> 0.1', '>= 0.1.3'], type=:dev
 end
 
 
@@ -24,4 +28,4 @@ end
 #rake docs  
 
 #Copy up to rubygem.org
-#rake release VERSION=1.0.1
+#rake release VERSION=0.0.1
