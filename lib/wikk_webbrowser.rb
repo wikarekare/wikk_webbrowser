@@ -13,7 +13,7 @@ module WIKK
   #  end
 
   class WebBrowser
-    VERSION = '0.9.0'
+    VERSION = '0.9.1'
   
     class Error < RuntimeError
       attr_accessor :web_return_code
@@ -33,6 +33,7 @@ module WIKK
     attr_accessor :verify_cert
     attr_accessor :port
     attr_accessor :use_ssl
+    attr_accessor :response
   
 
     # Create a WIKK_WebBrowser instance
@@ -50,6 +51,7 @@ module WIKK
       @use_ssl = use_ssl
       @port = port != nil ? port : ( use_ssl ? 443 : 80 )
       @verify_cert = verify_cert
+      @response = nil
     end
 
     # Create a WIKK_WebBrowser instance, connect to the host via http, and yield the WIKK_WebBrowser instance.
@@ -140,6 +142,14 @@ module WIKK
     def cookies_to_s
       @cookies.to_a.map { |v| v.join('=') }.join('; ')
     end
+    
+    # Get a header value, from the last response
+    #
+    # @param key [String] header key
+    # @return [String] header value, for the given key.
+    def header(key:)
+      @response.header['key']
+    end
 
     # send a GET query to the web server using an http get, and returns the response.
     #  Cookies in the response get preserved in @cookies, so they will be sent along with subsequent calls
@@ -176,26 +186,26 @@ module WIKK
     
       req.initialize_http_header( header )
 
-      response = @session.request(req)      
-      save_cookies(response)
+      @response = @session.request(req)      
+      save_cookies(@response)
     
-      $stderr.puts response.code.to_i if @debug
+      $stderr.puts @response.code.to_i if @debug
 
-      if(response.code.to_i >= 300)
-        if(response.code.to_i == 302)
+      if(@response.code.to_i >= 300)
+        if(@response.code.to_i == 302)
             #ignore the redirects.
             #$stderr.puts "302"
-            #response.each {|key, val| $stderr.printf "%s = %s\n", key, val }  #Location seems to have cgi params removed. End up with .../cginame?&
-            #$stderr.puts "Redirect to #{response['location']}"   #Location seems to have cgi params removed. End up with .../cginame?&
+            #@response.each {|key, val| $stderr.printf "%s = %s\n", key, val }  #Location seems to have cgi params removed. End up with .../cginame?&
+            #$stderr.puts "Redirect to #{@response['location']}"   #Location seems to have cgi params removed. End up with .../cginame?&
             #$stderr.puts
           return
-        elsif response.code.to_i >= 400 && response.code.to_i < 500
-          return response.body
+        elsif @response.code.to_i >= 400 && @response.code.to_i < 500
+          return @response.body
         end
-        raise Error.new(web_return_code: response.code.to_i, message: "#{response.code} #{response.message} #{query} #{form_values} #{response.body}")
+        raise Error.new(web_return_code: @response.code.to_i, message: "#{@response.code} #{@response.message} #{query} #{form_values} #{@response.body}")
       end
 
-      return response.body
+      return @response.body
     end
 
     # send a POST query to the server and return the response. 
@@ -238,23 +248,21 @@ module WIKK
         req.body = ''
       end
   
-      response = @session.request(req)
-      save_cookies(response)
+      @response = @session.request(req)
+      save_cookies(@response)
 
-      if(response.code.to_i >= 300)
-        if(response.code.to_i == 302)
+      if(@response.code.to_i >= 300)
+        if(@response.code.to_i == 302)
             #ignore the redirects. 
             #puts "302"
-            #response.each {|key, val| printf "%s = %s\n", key, val }  #Location seems to have cgi params removed. End up with .../cginame?&
-            #puts "Redirect of Post to #{response['location']}" #Location seems to have cgi params removed. End up with .../cginame?&
+            #@response.each {|key, val| printf "%s = %s\n", key, val }  #Location seems to have cgi params removed. End up with .../cginame?&
+            #puts "Redirect of Post to #{@response['location']}" #Location seems to have cgi params removed. End up with .../cginame?&
           return
         end
-        raise Error.new(web_return_code: response.code, message: "#{response.code} #{response.message} #{query} #{data} #{response.body}")
+        raise Error.new(web_return_code: @response.code, message: "#{@response.code} #{@response.message} #{query} #{data} #{@response.body}")
       end
-
-      @response = response
   
-      return response.body
+      return @response.body
     end
 
     # send a DELETE query to the server and return the response. 
@@ -279,13 +287,13 @@ module WIKK
       req.initialize_http_header( header )
 
       begin
-        response = @session.request(req)
-        save_cookies(response)
+        @response = @session.request(req)
+        save_cookies(@response)
       
-        if(response.code.to_i >= 300)
-          raise "#{url} : #{response.code} #{response.message}"
+        if(@response.code.to_i >= 300)
+          raise "#{url} : #{@response.code} #{@response.message}"
         end
-        return response.body
+        return @response.body
       rescue StandardError => e
         puts "#{e}"
         return nil
@@ -332,23 +340,21 @@ module WIKK
         req.body = ''
       end
   
-      response = @session.request(req)
-      save_cookies(response)
+      @response = @session.request(req)
+      save_cookies(@response)
 
-      if(response.code.to_i >= 300)
-        if(response.code.to_i == 302)
+      if(@response.code.to_i >= 300)
+        if(@response.code.to_i == 302)
             #ignore the redirects. 
             #puts "302"
-            #response.each {|key, val| printf "%s = %s\n", key, val }  #Location seems to have cgi params removed. End up with .../cginame?&
-            #puts "Redirect of Post to #{response['location']}" #Location seems to have cgi params removed. End up with .../cginame?&
+            #@response.each {|key, val| printf "%s = %s\n", key, val }  #Location seems to have cgi params removed. End up with .../cginame?&
+            #puts "Redirect of Post to #{@response['location']}" #Location seems to have cgi params removed. End up with .../cginame?&
           return
         end
-        raise Error.new(web_return_code: response.code, message: "#{response.code} #{response.message} #{query} #{data} #{response.body}")
+        raise Error.new(web_return_code: @response.code, message: "#{@response.code} #{@response.message} #{query} #{data} #{@response.body}")
       end
-
-      @response = response
   
-      return response.body
+      return @response.body
     end
 
     #Extract form field values from the html body.
