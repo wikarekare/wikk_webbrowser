@@ -13,7 +13,7 @@ module WIKK
   #  end
 
   class WebBrowser
-    VERSION = '0.9.1'
+    VERSION = '0.9.3'
   
     class Error < RuntimeError
       attr_accessor :web_return_code
@@ -147,8 +147,8 @@ module WIKK
     #
     # @param key [String] header key
     # @return [String] header value, for the given key.
-    def header(key:)
-      @response.header['key']
+    def header_value(key:)
+      @response.header[key]
     end
 
     # send a GET query to the web server using an http get, and returns the response.
