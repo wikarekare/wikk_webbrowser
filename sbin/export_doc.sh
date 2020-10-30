@@ -5,6 +5,7 @@
 . version
 
 cd gitdoc
+git pull --set-upstream origin gh-pages
 git add .
 git commit -m "#{PROJECT} Doc release ${VERSION}"
 git push --set-upstream origin gh-pages
