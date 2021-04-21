@@ -14,6 +14,7 @@ Hoe.spec "#{PROJECT}" do
   self.yard_options = ['--markup', 'markdown', '--protected']
 
   self.dependency "nokogiri", ['~> 1.0', '>= 1.0.0']
+  self.dependency "wikk_json", ['~> 1.0', '>= 1.0.0']
   self.dependency 'hoe-yard', ['~> 0.1', '>= 0.1.3'], type=:dev
 end
 

@@ -5,6 +5,7 @@ module WIKK
   require 'cgi'
   require 'nokogiri'
   require 'base64'
+  require 'wikk_json'
 
   # WIKK WebBrowser class under MIT Lic. https://github.com/wikarekare.
   # Wrapper around ruby's http classes
@@ -13,7 +14,7 @@ module WIKK
   #  end
 
   class WebBrowser
-    VERSION = '0.9.3'
+    VERSION = '0.9.4'
   
     class Error < RuntimeError
       attr_accessor :web_return_code
@@ -226,8 +227,7 @@ module WIKK
       header['Accept-Language'] = 'en-US,en;q=0.5'
       header['Connection'] = 'keep-alive'
       header['User-Agent'] = 'Mozilla/5.0'
-      #header['Content-Type'] = data.class == Hash ? 'application/x-www-form-urlencoded' : "text/json"
-      header['Content-Type'] = 'application/x-www-form-urlencoded' 
+      header['Content-Type'] = content_type
       add_cookies(extra_cookies)
       header['Cookie'] = cookies_to_s if @cookies.length > 0
       header['DNT'] = "1"
@@ -240,7 +240,11 @@ module WIKK
     
       if data != nil
         if data.class == Hash
-          req.set_form_data(data, '&') 
+          if content_type =~ /application\/octet-stream/
+            req.set_form_data(data, '&') 
+          else
+            req.set_form_data.to_j
+          end
         else
           req.body = data #If json as a string or raw string
         end
@@ -268,7 +272,6 @@ module WIKK
     # send a DELETE query to the server and return the response. 
     # @param query [String] URL, less the 'http://host/'  part
     # @param authorization [String] If present, add Authorization header, using this string
-    # @param content_type [String] Posted content type
     # @param extra_headers [Hash] Add these to standard headers
     # @param extra_cookies [Hash] Add these to standard cookies
     # @return [String] The Net::HTTPResponse.body text response from the web server
@@ -318,8 +321,7 @@ module WIKK
       header['Accept-Language'] = 'en-US,en;q=0.5'
       header['Connection'] = 'keep-alive'
       header['User-Agent'] = 'Mozilla/5.0'
-      #header['Content-Type'] = data.class == Hash ? 'application/x-www-form-urlencoded' : "text/json"
-      header['Content-Type'] = 'application/x-www-form-urlencoded' 
+      header['Content-Type'] = content_type
       add_cookies(extra_cookies)
       header['Cookie'] = cookies_to_s if @cookies.length > 0
       header['DNT'] = "1"
@@ -332,7 +334,11 @@ module WIKK
     
       if data != nil
         if data.class == Hash
-          req.set_form_data(data, '&') 
+          if content_type =~ /application\/octet-stream/
+            req.set_form_data(data, '&') 
+          else
+            req.set_form_data.to_j
+          end
         else
           req.body = data #If json as a string or raw string
         end
