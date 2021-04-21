@@ -14,7 +14,7 @@ module WIKK
   #  end
 
   class WebBrowser
-    VERSION = '0.9.4'
+    VERSION = '0.9.5'
   
     class Error < RuntimeError
       attr_accessor :web_return_code
