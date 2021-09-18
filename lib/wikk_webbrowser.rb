@@ -1,4 +1,4 @@
-module WIKK
+module WIKK # :nodoc:
   require 'net/http'
   require 'net/https'
   require 'uri'
@@ -12,11 +12,10 @@ module WIKK
   #  WIKK_WebBrowser.new.https_session(host: 'www.blah.com') do |session|
   #    response = get_page(query: ,'/')
   #  end
-
   class WebBrowser
     VERSION = '0.9.5'
 
-    class Error < RuntimeError
+    class Error < RuntimeError # :nodoc:
       attr_accessor :web_return_code
 
       def initialize(web_return_code:, message:)
