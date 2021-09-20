@@ -208,6 +208,8 @@ module WIKK # :nodoc:
       return @response.body
     end
 
+    alias get get_page
+
     # send a POST query to the server and return the response.
     # @param query [String] URL, less the 'http://host/'  part
     # @param authorization [String] If present, add Authorization header, using this string
@@ -267,6 +269,8 @@ module WIKK # :nodoc:
       return @response.body
     end
 
+    alias post post_page
+
     # send a DELETE query to the server and return the response.
     # @param query [String] URL, less the 'http://host/'  part
     # @param authorization [String] If present, add Authorization header, using this string
@@ -319,6 +323,8 @@ module WIKK # :nodoc:
         return nil
       end
     end
+
+    alias delete delete_req
 
     # send a PUT query to the server and return the response.
     # @param query [String] URL, less the 'http://host/'  part
@@ -378,6 +384,8 @@ module WIKK # :nodoc:
 
       return @response.body
     end
+
+    alias put put_req
 
     # Extract form field values from the html body.
     # @param body [String] The html response body
