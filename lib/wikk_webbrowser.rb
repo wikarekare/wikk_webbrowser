@@ -13,7 +13,7 @@ module WIKK # :nodoc:
   #    response = get_page(query: ,'/')
   #  end
   class WebBrowser
-    VERSION = '0.9.5'
+    VERSION = '0.9.6'
 
     class Error < RuntimeError # :nodoc:
       attr_accessor :web_return_code
@@ -270,10 +270,16 @@ module WIKK # :nodoc:
     # send a DELETE query to the server and return the response.
     # @param query [String] URL, less the 'http://host/'  part
     # @param authorization [String] If present, add Authorization header, using this string
+    # @param form_values [Hash{String=>Object-with-to_s}] The parameter passed to the web server eg. ?key1=value1&key2=value2...
+    # @param content_type [String] Posted content type. Only meaningful if there is data
+    # @param data [String] Text to add to body of DELETE to the web server. Not always supported at the server end.
     # @param extra_headers [Hash] Add these to standard headers
     # @param extra_cookies [Hash] Add these to standard cookies
     # @return [String] The Net::HTTPResponse.body text response from the web server
-    def delete_req(query:, authorization: nil, extra_headers: {}, extra_cookies: {})
+    def delete_req(query:, authorization: nil, form_values: nil, content_type: '"application/octet-stream"', data: nil, extra_headers: {}, extra_cookies: {})
+      $stderr.puts 'Debugging On' if @debug
+
+      query += form_values_to_s(form_values, query.index('?') != nil)
       url = URI.parse("#{@use_ssl ? 'https' : 'http'}://#{@host}/#{query.gsub(/^\//, '')}")
       req = Net::HTTP::Delete.new(query)
 
@@ -286,6 +292,18 @@ module WIKK # :nodoc:
         header[k] = v
       end
       req.initialize_http_header( header )
+
+      if data.nil?
+        req.body = ''
+      elsif data.instance_of?(Hash)
+        if content_type =~ /application\/octet-stream/
+          req.set_form_data(data, '&')
+        else
+          req.set_form_data.to_j
+        end
+      else
+        req.body = data # If json as a string or raw string
+      end
 
       begin
         @response = @session.request(req)
@@ -365,7 +383,6 @@ module WIKK # :nodoc:
     # @param body [String] The html response body
     # @return [Hash] Keys are the field names, values are the field values
     def extract_input_fields(body)
-      entry = true
       @inputs = {}
       doc = Nokogiri::HTML(body)
       doc.xpath('//form/input').each do |f|
@@ -377,7 +394,6 @@ module WIKK # :nodoc:
     # @param body [String] The html response body
     # @return [Hash] Keys are the link text, values are the html links
     def extract_link_fields(body)
-      entry = true
       @inputs = {}
       doc = Nokogiri::HTML(body)
       doc.xpath('//a').each do |f|
