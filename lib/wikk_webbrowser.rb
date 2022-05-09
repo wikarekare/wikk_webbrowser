@@ -13,7 +13,7 @@ module WIKK # :nodoc:
   #    response = get_page(query: ,'/')
   #  end
   class WebBrowser
-    VERSION = '0.9.6'
+    VERSION = '0.9.7'
 
     class Error < RuntimeError # :nodoc:
       attr_accessor :web_return_code
@@ -386,6 +386,67 @@ module WIKK # :nodoc:
     end
 
     alias put put_req
+
+    # send a PATCH query to the server and return the response.
+    # @param query [String] URL, less the 'http://host/'  part
+    # @param authorization [String] If present, add Authorization header, using this string
+    # @param content_type [String] Posted content type
+    # @param data [String] Text to add to body of post to the web server
+    # @param extra_headers [Hash] Add these to standard headers
+    # @param extra_cookies [Hash] Add these to standard cookies
+    # @return [String] The Net::HTTPResponse.body text response from the web server
+    def patch_req(query:, authorization: nil, content_type: '"application/octet-stream"', data: nil, extra_headers: {}, extra_cookies: {})
+      url = URI.parse("#{@use_ssl ? 'https' : 'http'}://#{@host}/#{query}")
+      req = Net::HTTP::Patch.new(url.path)
+
+      header = { 'HOST' => @host }
+      header['Accept'] = '*/*'
+      header['Accept-Encoding'] = 'gzip, deflate, br'
+      header['Accept-Language'] = 'en-US,en;q=0.5'
+      header['Connection'] = 'keep-alive'
+      header['User-Agent'] = 'Mozilla/5.0'
+      header['Content-Type'] = content_type
+      add_cookies(extra_cookies)
+      header['Cookie'] = cookies_to_s if @cookies.length > 0
+      header['DNT'] = '1'
+      header['Authorization'] = authorization if authorization != nil
+
+      extra_headers.each do |k, v|
+        header[k] = v
+      end
+      req.initialize_http_header( header )
+
+      if data.nil?
+        req.body = ''
+      elsif data.instance_of?(Hash)
+        if content_type =~ /application\/octet-stream/
+          req.set_form_data(data, '&')
+        else
+          req.set_form_data.to_j
+        end
+      else
+        req.body = data # If json as a string or raw string
+      end
+
+      @response = @session.request(req)
+      save_cookies(@response)
+
+      if @response.code.to_i >= 300
+        if @response.code.to_i == 302
+          # ignore the redirects.
+          # puts "302"
+          # @response.each {|key, val| printf "%s = %s\n", key, val }  #Location seems to have cgi params removed. End up with .../cginame?&
+          # puts "Redirect of Post to #{@response['location']}" #Location seems to have cgi params removed. End up with .../cginame?&
+          return
+        end
+
+        raise Error.new(web_return_code: @response.code, message: "#{@response.code} #{@response.message} #{query} #{data} #{@response.body}")
+      end
+
+      return @response.body
+    end
+
+    alias patch patch_req
 
     # Extract form field values from the html body.
     # @param body [String] The html response body
