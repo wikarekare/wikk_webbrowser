@@ -6,7 +6,7 @@
 git add .
 git commit -m "#{PROJECT} release ${VERSION}"
 git tag -a ${VERSION} -m "#{PROJECT} release ${VERSION}"
-git push origin
+git push origin --follow-tags
 
 /usr/local/bin/rake release VERSION=${VERSION} #--trace
 
