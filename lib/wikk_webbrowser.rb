@@ -1,4 +1,5 @@
-module WIKK # :nodoc:
+# Stay in our own namespace
+module WIKK
   require 'net/http'
   require 'net/https'
   require 'uri'
