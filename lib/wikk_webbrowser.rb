@@ -14,7 +14,7 @@ module WIKK
   #    response = get_page(query: ,'/')
   #  end
   class WebBrowser
-    VERSION = '0.9.7'
+    VERSION = '0.9.8'
 
     class Error < RuntimeError # :nodoc:
       attr_accessor :web_return_code
@@ -242,14 +242,14 @@ module WIKK
 
       if data.nil?
         req.body = ''
-      elsif data.instance_of?(Hash)
-        if content_type =~ /application\/octet-stream/
-          req.set_form_data(data, '&')
-        else
-          req.set_form_data.to_j
-        end
-      else
-        req.body = data # If json as a string or raw string
+      elsif data.instance_of?(String)
+        req.body = data # If we are given a String, just use it as is
+      elsif content_type =~ /application\/json/
+        req.body = data.to_j # Encode data as json. It wasn't already a String.
+      elsif content_type =~ /application\/octet-stream/ && (data.instance_of?(Hash) || data.instance_of?(Array))
+        req.set_form_data(data, '&') # Should handle Array as multiple entries with the same key, and Hash
+      else # Assuming data can become a string that makes sense to the other end
+        req.body = data.to_s # raw string
       end
 
       @response = @session.request(req)
